@@ -1,91 +1,106 @@
 package no.hvl.data102.filmarkiv.test;
 
+import static org.junit.jupiter.api.Assertions.*;
+
+import no.hvl.data102.filmarkiv.adt.FilmarkivADT;
+import no.hvl.data102.filmarkiv.impl.Film;
 import no.hvl.data102.filmarkiv.impl.Filmarkiv;
 import no.hvl.data102.filmarkiv.impl.Sjanger;
-import no.hvl.data102.filmarkiv.impl.Film;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+class FilmarkivTest {
+    private FilmarkivADT filmArchive;
+    private Film film1, film2, film3;
 
-    class FilmarkivTest {
+    @BeforeEach
+    void setUp() {
+        filmArchive = new Filmarkiv(10);
 
-        private Filmarkiv filmarkiv;
-        private Film film1, film2, film3;
-
-        @BeforeEach
-        void setUp() {
-            // Assuming Film constructor takes (int filmNr, String title, String selskap, Sjanger genre)
-            filmarkiv = new Filmarkiv(10);
-            film1 = new Film(1, "Palm", "Film One", 1992, Sjanger.ACTION, "YOLOinc");
-            film2 = new Film(2, "Palm", "Film Two", 1987, Sjanger.SIFI, "Company B");
-            film3 = new Film(3, "Palm", "Another Film", 2002, Sjanger.COMEDY, "Company A");
-
-            // Adding films to the Filmarkiv
-            filmarkiv.leggTilFilm(film1);
-            filmarkiv.leggTilFilm(film2);
-            filmarkiv.leggTilFilm(film3);
-        }
-
-        @Test
-        void testFinnFilm() {
-            Film[] foundFilm = filmarkiv.finnFilm(1);
-            assertNotNull(foundFilm);
-            assertEquals(film1, foundFilm[0]);
-
-            Film[] notFoundFilm = filmarkiv.finnFilm(99);
-            assertNull(notFoundFilm);
-        }
-
-        @Test
-        void testLeggTilFilm() {
-            assertEquals(3, filmarkiv.antall());
-
-            Film newFilm = new Film(4, "Palm", "Film Four", 2004, Sjanger.HISTORY, "Company Z");
-            filmarkiv.leggTilFilm(newFilm);
-            assertEquals(4, filmarkiv.antall());
-        }
-
-        @Test
-        void testSlettFilm() {
-            assertTrue(filmarkiv.slettFilm(2));
-            assertEquals(2, filmarkiv.antall());
-            assertFalse(filmarkiv.slettFilm(99)); // Trying to delete a non-existent film
-        }
-
-        @Test
-        void testSoekTittel() {
-            Film[] result = filmarkiv.soekTittel("Film");
-            assertEquals(3, result.length);
-
-            Film[] resultNoMatch = filmarkiv.soekTittel("Nonexistent");
-            assertEquals(0, resultNoMatch.length);
-        }
-
-        @Test
-        void testSoekProdusent() {
-            Film[] result = filmarkiv.soekProdusent("Company A");
-            assertEquals(2, result.length); // film1 and film3
-
-            Film[] resultNoMatch = filmarkiv.soekProdusent("Nonexistent");
-            assertEquals(0, resultNoMatch.length);
-        }
-
-        @Test
-        void testAntallSjanger() {
-            int actionCount = filmarkiv.antall(Sjanger.ACTION);
-            assertEquals(2, actionCount); // film1 and film3
-
-            int dramaCount = filmarkiv.antall(Sjanger.DRAMA);
-            assertEquals(1, dramaCount); // film2
-
-            int comedyCount = filmarkiv.antall(Sjanger.COMEDY);
-            assertEquals(0, comedyCount); // No comedy films in the list
-        }
-
-        @Test
-        void testAntall() {
-            assertEquals(3, filmarkiv.antall());
-        }
+        // Using the second constructor with parsed year and Sjanger enum
+        film1 = new Film(1, "Warner Bros", "The Matrix", 1999, Sjanger.SCIFI, "Warner Bros");
+        film2 = new Film(2, "Warner Bros", "Inception", 2010, Sjanger.DRAMA, "Warner Bros");
+        film3 = new Film(3, "Paramount", "Interstellar", 2014, Sjanger.SCIFI, "Paramount");
     }
 
+    @Test
+    void testLeggTilFilm() {
+        filmArchive.leggTilFilm(film1);
+        assertEquals(1, filmArchive.antall());
+
+        filmArchive.leggTilFilm(film2);
+        assertEquals(2, filmArchive.antall());
+    }
+
+    @Test
+    void testFinnFilm() {
+        filmArchive.leggTilFilm(film1);
+        filmArchive.leggTilFilm(film2);
+
+        Film[] resultat = filmArchive.finnFilm(1);
+        assertNotNull(resultat);
+        assertEquals(1, resultat[0].getFilmNr());
+
+        resultat = filmArchive.finnFilm(99);
+        assertNull(resultat);
+    }
+
+    @Test
+    void testSlettFilm() {
+        filmArchive.leggTilFilm(film1);
+        filmArchive.leggTilFilm(film2);
+
+        assertTrue(filmArchive.slettFilm(1));
+        assertEquals(1, filmArchive.antall());
+
+        assertFalse(filmArchive.slettFilm(99));
+    }
+
+    @Test
+    void testSoekTittel() {
+        filmArchive.leggTilFilm(film1);
+        filmArchive.leggTilFilm(film2);
+        filmArchive.leggTilFilm(film3);
+
+        Film[] resultat = filmArchive.soekTittel("matrix");
+        assertEquals(1, resultat.length);
+        assertEquals("The Matrix", resultat[0].getFilmTitle());
+
+        resultat = filmArchive.soekTittel("inter");
+        assertEquals(1, resultat.length);
+        assertEquals("Interstellar", resultat[0].getFilmTitle());
+    }
+
+    @Test
+    void testSoekProdusent() {
+        filmArchive.leggTilFilm(film1);
+        filmArchive.leggTilFilm(film2);
+        filmArchive.leggTilFilm(film3);
+
+        Film[] resultat = filmArchive.soekProdusent("warner");
+        assertEquals(2, resultat.length);
+
+        resultat = filmArchive.soekProdusent("paramount");
+        assertEquals(1, resultat.length);
+        assertEquals("Interstellar", resultat[0].getFilmTitle());
+    }
+
+    @Test
+    void testAntallSjanger() {
+        filmArchive.leggTilFilm(film1);
+        filmArchive.leggTilFilm(film2);
+        filmArchive.leggTilFilm(film3);
+
+        assertEquals(2, filmArchive.antall(Sjanger.SCIFI));
+        assertEquals(1, filmArchive.antall(Sjanger.DRAMA));
+        assertEquals(0, filmArchive.antall(Sjanger.ACTION));
+    }
+
+    @Test
+    void testTotalAntall() {
+        filmArchive.leggTilFilm(film1);
+        filmArchive.leggTilFilm(film2);
+
+        assertEquals(2, filmArchive.antall());
+    }
+}
